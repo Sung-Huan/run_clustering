@@ -77,6 +77,7 @@ def gen_input_goatools(filename, infos, exps, cutoff, q_info, q_exp, gos):
     datas = []
     ids = []
     pro_gos = []
+    ccs = []
     for info, exp in zip(infos, exps):
         if info != q_info:
             if "positive" in filename:
@@ -93,6 +94,7 @@ def gen_input_goatools(filename, infos, exps, cutoff, q_info, q_exp, gos):
                         pro_gos.append("NA")
                     datas.append(exp)
                     ids.append(info)
+                    ccs.append("{0:.5f}".format(float(spearmanr(exp, q_exp)[0])))
             elif "negative" in filename:
                 if (float(spearmanr(exp, q_exp)[0]) <= cutoff):
                     detect = False
@@ -107,6 +109,7 @@ def gen_input_goatools(filename, infos, exps, cutoff, q_info, q_exp, gos):
                         pro_gos.append("NA")
                     datas.append(exp)
                     ids.append(info)
+                    ccs.append("{0:.5f}".format(float(spearmanr(exp, q_exp)[0])))
     out.close()
     out_go = open(filename + "_go", "w")
     call(["python3", args.goatools_path, "--pval=0.05", "--indent",
@@ -125,12 +128,12 @@ def gen_input_goatools(filename, infos, exps, cutoff, q_info, q_exp, gos):
     fh.close()
     os.remove(filename)
     os.remove(filename + "_go")
-    return datas, ids, pro_gos, enrichs
+    return datas, ids, pro_gos, enrichs, ccs
 
 def plot(filename, q_info, q_exp, pngname, infos, exps, cutoff, genes, gos):
     tags = ["TSB_OD_0.2", "TSB_OD_0.5", "TSB_OD_1", "TSB_t0", "TSB_t1", "TSB_t2", "TSB_ON",
             "pMEM_OD_0.2", "pMEM_OD_0.5", "pMEM_OD_1", "pMEM_t0", "pMEM_t1", "pMEM_t2", "pMEM_ON"]
-    datas, ids, pro_gos, enrichs = gen_input_goatools(
+    datas, ids, pro_gos, enrichs, ccs = gen_input_goatools(
          filename, infos, exps, cutoff, q_info, q_exp, gos)
     f_datas = [q_exp]
     f_ids = [q_info]
@@ -138,8 +141,10 @@ def plot(filename, q_info, q_exp, pngname, infos, exps, cutoff, genes, gos):
     q_items = q_info.split("_")
     product = get_product(q_info)
     gene_name = get_gene_name(genes, q_info)
+    out.write("Query gene: " + "_".join(q_items[:3] + [product]) + "\n")
+    out.write("start\tend\tstrand\tgene\tgene_name\tGO\tC.C.\n")
     out.write("\t".join(q_items[:3] + [product, gene_name]) + "\n")
-    for info, exp, go_list in zip(ids, datas, pro_gos):
+    for info, exp, go_list, cc in zip(ids, datas, pro_gos, ccs):
         product = get_product(info)
         gene_name = get_gene_name(genes, info)
         items = info.split("_")
@@ -149,12 +154,12 @@ def plot(filename, q_info, q_exp, pngname, infos, exps, cutoff, genes, gos):
                     f_datas.append(exp)
                     f_ids.append(info)
                     out.write("\t".join(items[:3] + [product, gene_name,
-                                        ";".join(go_list)]) + "\n")
+                                        ";".join(go_list), str(cc)]) + "\n")
                     break
         else:
             f_datas.append(exp)
             f_ids.append(info)
-            out.write("\t".join(items[:3] + [product, gene_name, "-"]) + "\n")
+            out.write("\t".join(items[:3] + [product, gene_name, "-", str(cc)]) + "\n")
     out.close()
     fig = plt.figure(figsize=(14, 10))
     for data, id_ in zip(f_datas, f_ids):

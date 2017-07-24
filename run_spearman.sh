@@ -3,7 +3,6 @@ main(){
     correlation_one
 #    correlation_all
 #    network
-#    enrich
 }
 
 correlation_one(){
@@ -14,9 +13,9 @@ correlation_one(){
                                -ga bin/goatools/data/go_database \
                                -po bin/goatools/data/group_pop \
                                -gb go-basic.obo \
-                               -pc 0.77 -nc -0.77 -p 2812928:2813012:+ \
+                               -pc 0.77 -nc -0.77 -p 2244481:2244535:- \
                                -g input/GeneSpecificInformation_NCTC8325_del.csv \
-                               -i output/gene_wise_quantifications_combined_deseq2_new.csv
+                               -i output/gene_wise_quantifications_combined_deseq2_final.csv
 #    mv *_positive* query
 #    mv *_negative* query
 }
@@ -31,22 +30,14 @@ correlation_all(){
                              -gb go-basic.obo \
                              -pc 0.77 -nc -0.77 \
                              -g input/GeneSpecificInformation_NCTC8325_del.csv \
-                             -i output/gene_wise_quantifications_combined_deseq2_new.csv \
-                             -t input/Staphylococcus_aureus_HG003_overlap.csv
-    mv *_positive* query
-    mv *_negative* query
+                             -i output/gene_wise_quantifications_combined_deseq2_final.csv \
+                             -t input/Staphylococcus_aureus_HG003_overlap.csv \
+		             -o query
 }
 
 network(){
-    python3 bin/network_bokeh.py -i output/gene_wise_quantifications_combined_deseq2_new.csv
-}
-
-enrich(){
-    mkdir enrich_query
-    for FILE in $(ls query)
-    do
-        python3 bin/goatools/scripts/find_enrichment.py --pval=0.05 --indent query/$FILE bin/goatools/data/group_pop bin/goatools/data/go_database > enrich_query/$FILE
-    done
+    python3 bin/network_bokeh.py -i output/gene_wise_quantifications_combined_deseq2_final.csv
+    python3 bin/network_bokeh2.py -i output/gene_wise_quantifications_combined_deseq2_final.csv
 }
 
 main
