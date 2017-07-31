@@ -22,7 +22,7 @@ parser.add_argument("-g","--gene_name_file", default=None, help="gene name file"
 parser.add_argument("-pc","--pos_cut", type=float, default=0.8, help="the cutoff of positive correlation, default is 0.8")
 parser.add_argument("-nc","--neg_cut", type=float, default=-0.8, help="the cutoff of negative correlation, default is -0.8")
 parser.add_argument("-k","--known_srna_only", action="store_true", help="only analyze known sRNA")
-parser.add_argument("-t","--target_file", help="sRNA target file")
+parser.add_argument("-t","--target_file", help="sRNA target file", default=None)
 parser.add_argument("-kc","--known_srna_color", default="silver", help="the color for known sRNA")
 parser.add_argument("-dc","--novel_srna_color", default="silver", help="the color for novel sRNA")
 parser.add_argument("-cc","--cds_color", default="silver", help="the color for CDS")
@@ -32,6 +32,7 @@ parser.add_argument("-gb","--obo_file", help="path fo go.obo")
 parser.add_argument("-po","--population_file", help="Go population file")
 parser.add_argument("-ga","--go_association", help="Go association file")
 parser.add_argument("-o","--out_folder", help="Output folder", required=True)
+parser.add_argument("-s","--strain", help="Strain name")
 args = parser.parse_args()
 
 def get_product(info):
@@ -57,7 +58,7 @@ def get_pro_id(info):
 def get_gene_name(genes, info):
     attrs = "_".join(info.split("_")[3:])
     datas = attrs.split(";")
-    if "ID=srna" not in info:
+    if ("ID=" + args.strain) not in info:
         for data in datas:
             if data.startswith("locus_tag"):
                 locus = data.split("=")[-1]
@@ -202,12 +203,15 @@ def main():
     goh = open(args.go_file, "r")
     for row in csv.reader(goh, delimiter='\t'):
         gos[row[0]] = row[1].split(";")
-    tars = []
-    th = open(args.target_file, "r")
-    for row in csv.reader(th, delimiter='\t'):
-        tars.append({"srna_start": row[2].split("-")[0], "srna_end": row[2].split("-")[-1],
-                     "srna_strand": row[5], "tar_start": row[9].split("-")[0],
-                     "tar_end": row[9].split("-")[-1], "tar_strand": row[12]})
+    if args.target_file is not None:
+        tars = []
+        th = open(args.target_file, "r")
+        for row in csv.reader(th, delimiter='\t'):
+            tars.append({"srna_start": row[2].split("-")[0], "srna_end": row[2].split("-")[-1],
+                         "srna_strand": row[5], "tar_start": row[9].split("-")[0],
+                         "tar_end": row[9].split("-")[-1], "tar_strand": row[12]})
+    else:
+        tars = None
     exps = []
     infos = []
     genes = {}

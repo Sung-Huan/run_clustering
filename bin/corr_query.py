@@ -32,6 +32,7 @@ parser.add_argument("-gp","--goatools_path", help="path of find_enrichment.py in
 parser.add_argument("-gb","--obo_file", help="path fo go.obo")
 parser.add_argument("-po","--population_file", help="Go population file")
 parser.add_argument("-ga","--go_association", help="Go association file")
+parser.add_argument("-s","--strain", help="Strain name")
 
 args = parser.parse_args()
 
@@ -59,7 +60,8 @@ def get_pro_id(info):
 def get_gene_name(genes, info):
     attrs = "_".join(info.split("_")[3:])
     datas = attrs.split(";")
-    if "ID=srna" not in info:
+    print(info)
+    if (("ID=" + args.strain) not in info):
         for data in datas:
             if data.startswith("locus_tag"):
                 locus = data.split("=")[-1]
